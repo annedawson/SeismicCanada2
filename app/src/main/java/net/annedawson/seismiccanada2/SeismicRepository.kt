@@ -10,8 +10,13 @@ import kotlinx.coroutines.withContext
 class SeismicRepository {
     private val client = OkHttpClient()
 
-    // Using USGS feed as a reliable JSON source. It aggregates data including from CNSN.
-    private val url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/2.5_day.geojson"
+    // Using USGS (US Geological Survey) feed as a reliable JSON source.
+    // It aggregates data including from CNSN -
+    // Canadian National Seismograph Network CNSN
+    // Separately, Natural Resources Canada - Earthquake Early Warning
+    // report sending data to USGS
+    // Changed to 30 days (1.0+) to include smaller earthquakes
+    private val url = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/1.0_month.geojson"
 
     suspend fun fetchEarthquakes(): List<Earthquake> = withContext(Dispatchers.IO) {
         val request = Request.Builder().url(url).build()
@@ -43,14 +48,15 @@ class SeismicRepository {
             val lat = coordinates.getDouble(1)
             val depth = coordinates.getDouble(2)
 
-            // Filter for Canada approx bounding box
-            // Lat: 41.0 to 83.0, Lon: -141.0 to -50.0
-            // Also include some buffer or just check if string contains "Canada" or "CA"
-            // The 'place' string usually looks like "54km S of Whites City, New Mexico" or "10km NW of Ottawa, Canada"
+            // Filter for British Columbia, Canada
+            // Approximate bounding box for BC: Lat 48.0 to 60.0, Lon -139.0 to -114.0
+            // Also check if place string explicitly mentions British Columbia
             
-            val isCanadaLocation = (lat in 41.0..85.0 && lon in -142.0..-50.0) || place.contains("Canada", ignoreCase = true)
+            val isInBcCoordinates = lat in 48.0..60.0 && lon in -139.0..-114.0
+            val isBcString = place.contains("British Columbia", ignoreCase = true) || 
+                             place.contains("BC, Canada", ignoreCase = true)
 
-            if (isCanadaLocation) {
+            if (isInBcCoordinates || isBcString) {
                 earthquakes.add(
                     Earthquake(
                         id = id,

@@ -53,7 +53,7 @@ fun SeismicApp(viewModel: SeismicViewModel = viewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Seismic Canada Alert") },
+                title = { Text("Seismic BC Alert") },
                 actions = {
                     IconButton(onClick = { showSafetyInfo = true }) {
                         Icon(Icons.Default.Info, contentDescription = "Safety Info")
@@ -76,7 +76,14 @@ fun SeismicApp(viewModel: SeismicViewModel = viewModel()) {
                     modifier = Modifier.align(Alignment.Center).padding(16.dp)
                 )
             } else {
-                EarthquakeList(earthquakes = earthquakes)
+                if (earthquakes.isEmpty()) {
+                    Text(
+                        text = "No recent earthquakes in BC",
+                        modifier = Modifier.align(Alignment.Center)
+                    )
+                } else {
+                    EarthquakeList(earthquakes = earthquakes)
+                }
             }
         }
     }
